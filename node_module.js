@@ -10,49 +10,49 @@ var port = 8899;
 // -------------------------------------------------- LOGGING
 
 var Severity = {
-	VERBOSE : 0,
-	DEBUG   : 1,
-	ERROR   : 2
+    VERBOSE : 0,
+    DEBUG   : 1,
+    ERROR   : 2
 }
 
 var logMinSeverity = Severity.DEBUG;
 
 if(process.argv.length > 2) {
-	logMinSeverity = process.argv[2];
+    logMinSeverity = process.argv[2];
 }
 
 function log(severity, value) {
-	if(severity < logMinSeverity) {
-		return;
-	}
+    if(severity < logMinSeverity) {
+        return;
+    }
 
-	message = Date.now() + " ";
+    message = Date.now() + " ";
 
-	switch(severity) {
-		case Severity.VERBOSE:
-			message = message + "[V]";
-			break;
+    switch(severity) {
+        case Severity.VERBOSE:
+            message = message + "[V]";
+            break;
 
-		case Severity.DEBUG:
-			message = message +  "[D]";
-			break;
+        case Severity.DEBUG:
+            message = message +  "[D]";
+            break;
 
-		case Severity.ERROR:
-			message = message + "[E]";
-			break;
+        case Severity.ERROR:
+            message = message + "[E]";
+            break;
 
-	}
+    }
 
-	console.log(message + " " + value);
+    console.log(message + " " + value);
 }
 
 // -------------------------------------------------- PROCESSING
 
 function getPhantomCommand(url) {
-	command = [phantomJSCommand, processingScriptPath, url].join(" ");
-	log(Severity.VERBOSE, command);
+    command = [phantomJSCommand, processingScriptPath, url].join(" ");
+    log(Severity.VERBOSE, command);
 
-	return command;
+    return command;
 }
 
 /**
@@ -63,13 +63,13 @@ function getPhantomCommand(url) {
  *
  * {
  *    "byline" : [byline],
- * 	  "content" : [sanitized content HTML],
+ *    "content" : [sanitized content HTML],
  *    "dir" : [dir], // not in use
  *    "exceprt" : [article excerpt],
  *    "length" : [article length],
  *    "title" : [title],
  *    "uri" : {
- *	     "host": [host],
+ *       "host": [host],
  *       "pathBase": [path base],
  *       "prePath": [prePath],
  *       "scheme": [scheme],
@@ -78,28 +78,28 @@ function getPhantomCommand(url) {
  * }
  */
 function _process(url, res) {
-	childProcess.exec(
-		getPhantomCommand(url),
-		function(err, stdout, stderr) {
-			// handle results 
-  			if(stderr === null || stderr == undefined || stderr.length == 0) {
-				processedJson = JSON.parse(stdout);
+    childProcess.exec(
+        getPhantomCommand(url),
+        function(err, stdout, stderr) {
+            // handle results 
+            if(stderr === null || stderr == undefined || stderr.length == 0) {
+                processedJson = JSON.parse(stdout);
 
-  				log(Severity.DEBUG, "Processing complete");
-  				log(Severity.VERBOSE, JSON.stringify(processedJson));
+                log(Severity.DEBUG, "Processing complete");
+                log(Severity.VERBOSE, JSON.stringify(processedJson));
 
-  				res.send(processedJson);
-  			} else if(stderr != null) {
-  				log(Severity.ERROR, "stderr");
-				log(Severity.ERROR, stderr);
-  				res.send(500, err);
-  			} else if(err != null) {
-  				log(Severity.ERROR, "err");
-  				log(Severity.ERROR, err);
-  				res.send(500, err);
-  			}
-		}
-	);	
+                res.send(processedJson);
+            } else if(stderr != null) {
+                log(Severity.ERROR, "stderr");
+                log(Severity.ERROR, stderr);
+                res.send(500, err);
+            } else if(err != null) {
+                log(Severity.ERROR, "err");
+                log(Severity.ERROR, err);
+                res.send(500, err);
+            }
+        }
+    );  
 }
 
 // -------------------------------------------------- SERVER
@@ -108,19 +108,19 @@ function _process(url, res) {
  * Starts the server and listens on the port provided
  */
 function startServer(port) {
-	log(Severity.DEBUG, "Starting server on port " + port);
+    log(Severity.DEBUG, "Starting server on port " + port);
 
-	var app = express();
+    var app = express();
 
-	app.get("/process/:url", function(req, res) {
-		log(Severity.DEBUG, "Processing: " + req.params.url);
-		_process(req.params.url, res);
-	});	
+    app.get("/process/:url", function(req, res) {
+        log(Severity.DEBUG, "Processing: " + req.params.url);
+        _process(req.params.url, res);
+    }); 
 
-	app.listen(port);
+    app.listen(port);
 
-	log(Severity.DEBUG, "Server started");
-}	
+    log(Severity.DEBUG, "Server started");
+}   
 
 // -------------------------------------------------- MAIN
 
