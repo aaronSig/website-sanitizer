@@ -12,3 +12,7 @@ The server can be configured by editing [node_module.js](https://github.com/supe
 `processingScriptPath`: Path to the script used to process the file. Should be set to "parser.js"
 
 `port`: Port on which the server should be running.
+
+## Running the server
+
+`node node_module.js`
