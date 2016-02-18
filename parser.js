@@ -2,13 +2,13 @@ var page   = require('webpage').create();
 var system = require('system');
 var args   = system.args;
 
-function _log(message) {
-    console.log(message);
+function log(message) {
+    // console.log(message);
 }
 
 function exitWithError(error) {
     console.error("ERROR: " + error);
-    require("system").stderr.write(Array.prototype.join.call(arguments, ' '));
+    require("system").stderr.write(error);
     phantom.exit(10);
 }
 
@@ -28,11 +28,7 @@ function storeArticle(url, article) {
 }
 
 function process() {
-    // _log("processing web page");
-
     var location = document.location;
-
-    // _log("location: " + location);
 
     var uri = {
       spec: location.href,
@@ -42,39 +38,27 @@ function process() {
       pathBase: location.protocol + "//" + location.host + location.pathname.substr(0, location.pathname.lastIndexOf("/") + 1)
     };
 
-    // _log("uri");
-    // _log(JSON.stringify(uri));
-
-    var article = new Readability(uri, document).parse();
-
-    if(article === null || article === undefined || article.length == 0) {
-        exitWithError("Readability was unable to process the article");
-    }
-
-
-    // _log("article");
-    // _log(JSON.stringify(article));   
-
-    // _log("processing complete");
-
-    return article;
+    return new Readability(uri, document).parse();;
 }
 
 function load(address) {
-    // _log("loading web page: " + address);
+    log("Loading web page: " + address);
 
     page.open(pageAddress, function(status) {
-        // _log("received status " + status);
+        log("Received status " + status);
 
         if(status === "success") {
-            // _log("injecting readability");
+            log("Injecting readability");
 
             if(!page.injectJs("Readability.js")) {
-                // _log("COULDNT LOAD READABILITY");
                 exitWithError("Unable to inject the Readability library");
             }
 
             var result = page.evaluate(process);
+
+            if(result === null || result === undefined || result.length == 0) {
+                exitWithError("Readability was unable to process the article");
+            }
 
             printArticle(result);
             phantom.exit(0);
