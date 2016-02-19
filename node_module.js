@@ -124,6 +124,6 @@ function startServer(port) {
 
 // -------------------------------------------------- MAIN
 
-startServer(8899);
+startServer(port);
 
 
