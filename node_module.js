@@ -1,11 +1,14 @@
 var childProcess = require('child_process');
 var express = require('express');
+var swig  = require('swig');
+var NodeCache = require( "node-cache" );
 
 // -------------------------------------------------- CONFIG
 
 var phantomJSCommand = "phantomjs";
 var processingScriptPath = "parser.js";
 var port = 8899;
+var cacheTTL = 3600000;
 
 // -------------------------------------------------- LOGGING
 
@@ -100,6 +103,48 @@ function _process(url, res) {
             }
         }
     );  
+
+}
+
+function _sanitize(url, res) {
+    if(cache.get(url) != undefined) {
+        log(Severity.DEBUG, "Loading from cache");
+        res.send(_wrap(cache.get(url)));
+    } else {
+        childProcess.exec(
+            getPhantomCommand(url),
+            function(err, stdout, stderr) {
+                // handle results 
+                if(stderr === null || stderr == undefined || stderr.length == 0) {
+                    processedJson = JSON.parse(stdout);
+
+                    cache.set(url, processedJson);
+
+                    log(Severity.DEBUG, "Processing complete");
+                    log(Severity.VERBOSE, JSON.stringify(processedJson));
+
+                    res.send(_wrap(processedJson));
+                } else if(stderr != null) {
+                    log(Severity.ERROR, "stderr");
+                    log(Severity.ERROR, stderr);
+                    res.send(500, err);
+                } else if(err != null) {
+                    log(Severity.ERROR, "err");
+                    log(Severity.ERROR, err);
+                    res.send(500, err);
+                }
+            }
+        );     
+    }
+    
+};
+
+function _wrap(article) {
+    var dat = article.uri.spec.match(/(\d{4})(?:\/(\d{2}))?(?:\/(\d{2}))/);
+
+    log(Severity.VERBOSE, dat);
+
+    return swig.renderFile("templates/mothercare.html", {content: article, date: dat});
 }
 
 // -------------------------------------------------- SERVER
@@ -111,11 +156,17 @@ function startServer(port) {
     log(Severity.DEBUG, "Starting server on port " + port);
 
     var app = express();
+    app.use(express.static("public"));
 
     app.get("/process/:url", function(req, res) {
         log(Severity.DEBUG, "Processing: " + req.params.url);
         _process(req.params.url, res);
     }); 
+
+    app.get("/wrap/:url", function(req, res){
+        log(Severity.DEBUG, "Wrapping " + req.params.url);
+        _sanitize(req.params.url, res);
+    });
 
     app.listen(port);
 
@@ -123,6 +174,9 @@ function startServer(port) {
 }   
 
 // -------------------------------------------------- MAIN
+
+cache = new NodeCache({ stdTTL: cacheTTL, checkperiod: 60000 });
+swig.setDefaults({ cache: false });
 
 startServer(port);
 

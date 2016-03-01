@@ -55,7 +55,8 @@ function load(address) {
             }
 
             var result = page.evaluate(process);
-
+            
+            // todo: this sucks balls ...
             if(result === null || result === undefined || result.length == 0) {
                 exitWithError("Readability was unable to process the article");
             }

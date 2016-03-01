@@ -1,0 +1,20 @@
+<html>
+	<head>
+		<link href='https://fonts.googleapis.com/css?family=Roboto:400,100' rel='stylesheet' type='text/css'>
+
+		<link rel="stylesheet" type="text/css" href="/css/mothercare.css">
+		
+
+		<script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
+		<script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+
+		<script type="text/javascript" src="/js/mothercare.js"></script>
+
+		<title>{{content.title}}</title>
+	</head>	
+
+	<body>
+		<div class="date">{{date[3]}} {{date[2]}} {{date[1]}}</div>
+		{{content.content|safe}}
+	</body>
+</html>
